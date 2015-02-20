@@ -1,0 +1,210 @@
+<project default="menu">
+
+  <!-- build.xml for InAndOutBurgerDirectory issue,
+  UCSB, CS56, Aaron Dodson, P. Conrad, 01/12/2011 -->
+
+  <property name="projectName" value="cs56_W11_0000003" />
+  <property environment="env"/> <!-- load the environment variables -->
+
+  <!-- Load the properties file for this host. -->
+       
+  <property file="${env.HOSTNAME}.properties" /> 
+
+  <!-- create a destination for the java doc -->
+
+  <property name="webRoot" value="${env.HOME}/public_html/cs56/W11/issues/0000003" />
+  <property name="webAddress" value="http://www.cs.ucsb.edu/~${env.USER}/cs56/W11/issues/0000003" />
+  
+  <property name="javadocDest" 
+            value="${webRoot}/javadoc" />
+
+  <property name="javadocURL" 
+            value="${webAddress}/javadoc" />
+
+  <property name="distDest" 
+            value="${webRoot}" />
+
+  <property name="sourceDest" 
+            value="${webRoot}" />
+
+  <property name="indexHtmlDest" 
+            value="${webRoot}" />
+
+
+  <target name="all" depends="compile, jar, test, dist, doc, clean" />
+
+  <target name="menu">
+    <echo><![CDATA[
+
+      ======= build.xml menu =======
+
+      ant compile   compile all the code
+      ant doc       create all the JavaDoc
+      ant test      run the JUnit tests
+      ant clean     clean up
+      ant dist      publish a tarball, zip, jar, source, doc distribution
+      ant jar       create a Java archive
+      ant all       compile, test, distribute
+
+      ]]>
+    </echo>
+  </target>
+
+
+  <target name="compile">
+    <mkdir dir="build" />
+    <javac srcdir="src" destdir="build" 
+	   debug="on" debuglevel="lines,vars,source" />
+
+  </target>
+
+ <target name="clean" >
+
+   <delete quiet="true">
+     <fileset dir="build" includes="**/*"/>
+     <fileset dir="javadoc" includes="**/*"/>
+     <fileset dir="temp" includes="**/*"/>
+   </delete>
+
+ </target>
+
+ <target name="doc" depends="compile">
+
+   <javadoc sourcepath="src"
+            destdir="javadoc"
+            author="true" version="true" use="true" >
+
+     <fileset dir="." includes="**/*.java"/>
+
+   </javadoc>
+
+   <!-- copy everything you just made to the javadoc destination,
+        and then make it readable -->
+
+   <copy todir="${javadocDest}">
+     <fileset dir="javadoc"/>
+   </copy>
+
+   <!-- Note: this only does the chmod command on the 
+        javadoc subdirectory and its contents.  You will have to
+	MANUALLY do the chmod on the parent directories.  However,
+	you should only need to do that once. -->
+
+   <chmod dir="${javadocDest}" perm="755"  type="dir"
+       includes="**" verbose="true"/>
+
+   <chmod dir="${javadocDest}" perm="755"  type="file"
+       includes="**/*" verbose="true"/>
+
+   
+
+   <echo>Javadoc deployed to ${javadocURL}</echo>
+
+  </target>
+
+
+<target name="test" depends="compile,jar">
+
+     <exec executable="java">
+       <arg line="-jar ${webRoot}/cs56_W11_0000003.jar"/>
+     </exec>
+
+</target>
+
+
+<target name="dist" depends="sourceDist">
+
+
+  <delete quiet="true">
+     <fileset dir="temp" includes="**/*" />  
+     <!--<fileset dir="${distDest}" includes="**/*" />-->
+  </delete>
+
+  <mkdir dir="${distDest}" />
+
+  <mkdir dir="temp" />
+  <mkdir dir="temp/${projectName}" />
+
+  <copy todir="temp/${projectName}">
+    <fileset dir="." 
+     excludes="build/**, javadoc/**, **/*~, temp/**" />
+  </copy>
+
+  <tar destfile="temp/${projectName}.tar"
+       basedir="temp"
+       includes="${projectName}/**" 
+   />
+
+  <gzip zipfile="${distDest}/${projectName}.tgz" 
+        src="temp/${projectName}.tar" />
+
+  <zip destfile="${distDest}/${projectName}.zip"
+       basedir="temp"
+       includes="${projectName}/**"
+  />
+
+  <delete quiet="true">
+     <fileset dir="temp" includes="**/*"/>  
+  </delete>
+
+
+
+   <!-- Note: this only does the chmod command on the 
+        indicated subdirectory and its contents.  You will have to
+	MANUALLY do the chmod on the parent directories.  However,
+	you should only need to do that once. -->
+
+   <chmod dir="${distDest}" perm="755"  type="dir"
+       includes="**" verbose="true"/>
+
+   <chmod dir="${distDest}" perm="755"  type="file"
+       includes="**/*" verbose="true"/>
+
+
+</target>
+
+<!-- Based on http://mail-archives.apache.org/mod_mbox/ant-user/200203.mbox/%3CNDBBIMHCHMPELMBMMFIMEEPAIAAA.conor@cortexebusiness.com.au%3E -->
+
+<target name="jar" depends="compile">
+	<mkdir dir="${webRoot}" />
+   <jar basedir="build" jarfile="${webRoot}/${projectName}.jar">
+      <manifest>
+        <attribute name="Main-Class" value="edu.ucsb.cs56.W11.aarondodson.InAndOutBurger.Test"/>
+      </manifest>
+    </jar>
+</target>
+
+<target name="sourceDist" depends="clean">
+
+  <!--<delete quiet="true">
+     <fileset dir="${sourceDest}" includes="**/*" />  
+  </delete>-->
+
+  <mkdir dir="${sourceDest}" />
+
+  <copy todir="${sourceDest}">
+    <fileset dir="." 
+    excludes="build/**, javadoc/**, **/*~, temp/**, html/**" />
+  </copy>
+
+   <!-- Note: this only does the chmod command on the 
+        indicated subdirectory and its contents.  You will have to
+	MANUALLY do the chmod on the parent directories.  However,
+	you should only need to do that once. -->
+
+   <chmod dir="${sourceDest}" perm="755"  type="dir"
+       includes="**" verbose="true"/>
+
+   <chmod dir="${sourceDest}" perm="755"  type="file"
+       includes="**/*" verbose="true"/>
+
+
+
+</target>
+
+
+
+</project>
+
+
+
